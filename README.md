@@ -2,12 +2,11 @@
 
 Alien Invasion is a simple space invaders-like game built using the Pygame library in Python.
 
-## Table of Contents
+## Author
 
-- [Installation](#installation)
-- [Gameplay](#gameplay)
-- [Controls](#controls)
-- [Features](#features)
+**Your Name**
+
+- GitHub: [Your GitHub Profile](https://github.com/vaseemsworld)
 
 ## Installation
 
@@ -18,4 +17,4 @@ git clone https://github.com/your-username/alien-invasion.git
 cd alien-invasion
 python alien_invasion.py
 
-**## Author - Vaseem khan**
+
