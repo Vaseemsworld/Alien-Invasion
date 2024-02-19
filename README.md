@@ -18,4 +18,4 @@ git clone https://github.com/your-username/alien-invasion.git
 cd alien-invasion
 python alien_invasion.py
 
-# Author - Vaseem khan
+**## Author - Vaseem khan**
