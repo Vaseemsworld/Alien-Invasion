@@ -8,17 +8,18 @@ from bullet import Bullet
 from alien import Alien
 from game_stats import GameStats
 from button import Button
-from scoreboard import ScoreBoard
-
+from scoreboard import ScoreBoard, ShipBoard
 
 class AlienInvasion:
     def __init__(self):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.settings = Settings()
-        # self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
-        # update the game to full screen
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.size = self.screen.get_size()
+        self.screen_width, self.screen_height = self.size
+        bg_img = pygame.image.load('images/background.jpg')
+        self.background = pygame.transform.scale(bg_img, (self.settings.screen_width, self.settings.screen_height))
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         self.screen_rect = self.screen.get_rect()
@@ -30,23 +31,32 @@ class AlienInvasion:
         self.aliens = pygame.sprite.Group()
         self.game_active = False
         self.play_button = Button(self, 'Play')
-
+        self.game_pause = False
+        self.ships = pygame.sprite.Group()
+        self.prep_ships()
+    def prep_ships(self):
+        self.ships.empty()
+        for ship_number in range(self.settings.ship_limit):
+            ship = ShipBoard(self)
+            ship.rect.x = 10 + ship_number * ship.rect.width
+            ship.rect.y = 10  # Adjust the y-coordinate as needed
+            self.ships.add(ship)
     def run_game(self):
-        ''' Note - don't put _create_fleet func in the loop bcs it create aliens every time the loop
-        run and in game loop run unlimited times and make game slow'''
-        # create alien fleet
         self._create_fleet()
         while True:
             self._check_event()
-            if self.game_active:
-                self.ship.update()
-                self.bullets.update()
-                self._update_bullets()
-                self._update_alien()
-
+            if not self.game_pause:
+                if self.game_active and self.stats.lives > 0:
+                    self.ship.update()
+                    self.bullets.update()
+                    self._update_bullets()
+                    self._update_alien()
+                else:
+                    self.game_active = False
+                    pygame.mouse.set_visible(True)
+                    self.play_button.game_over()
             self._update_screen()
             self.clock.tick(60)
-
 
     def _check_event(self):
         for event in pygame.event.get():
@@ -65,7 +75,13 @@ class AlienInvasion:
             sys.exit()
 
         if event.key == pygame.K_p:
-            self._start_game()
+            if self.game_active and not self.game_pause:
+                self.game_pause = True
+
+        if event.key == pygame.K_RETURN:
+            self.game_pause = False
+            mouse_pos = pygame.mouse.get_pos()
+            self._check_play_button(mouse_pos)
 
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = True
@@ -83,21 +99,16 @@ class AlienInvasion:
             self.ship.moving_left = False
 
     def _fire_bullet(self):
-        # create a new bullet and add it to the bullets group
-        # limits the bullets allowed at once
-        # if (len(self.bullets)) < self.settings.bullets_allowed:
         new_bullet = Bullet(self)
         self.bullets.add(new_bullet)
 
     def _update_bullets(self):
-        # get rid of bullets that disappers from the screen
         for bullet in self.bullets.sprites():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
         self._bullet_alien_collision()
 
     def _bullet_alien_collision(self):
-        # check for any bullet that have hit alien if so git rid of them
         collision = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
         if collision:
             for aliens in collision.values():
@@ -108,17 +119,16 @@ class AlienInvasion:
             self.bullets.empty()
             self._create_fleet()
             self._increase_speed()
-            self.stats.level +=1
+            self.stats.level += 1
             self.scoreboard.prep_level()
 
     def _increase_speed(self):
-        '''increase speed settings and alien point values'''
         self.settings.ship_speed *= self.settings.speedup_scale
         self.settings.bullet_speed *= self.settings.speedup_scale
         self.settings.alien_speed *= self.settings.speedup_scale
         self.settings.alien_points = int(self.settings.alien_points * self.settings.score_scale)
+
     def _create_fleet(self):
-        # create fleet
         alien = Alien(self)
         alien_width = alien.rect.width
         alien_height = alien.rect.height
@@ -132,7 +142,6 @@ class AlienInvasion:
             current_y += 2 * alien_height
 
     def _create_alien(self, x_position, y_position):
-        # create one alien
         new_alien = Alien(self)
         new_alien.x = x_position
         new_alien.rect.x = x_position
@@ -161,76 +170,77 @@ class AlienInvasion:
             self._ship_hit()
 
     def _ship_hit(self):
-        # empty bullets and aliens groups
         if self.settings.ship_limit > 0:
             self.settings.ship_limit -= 1
-            self.stats.lives -= 1
-            self.scoreboard.prep_lives()
+            self.ships.sprites()[0].kill()  # Remove the current ship
             self.bullets.empty()
             self.aliens.empty()
             self._create_fleet()
-            self.ship.center_ship()
-            # Pause
-            sleep(1)
+            self.prep_ships()  # Create a new ship
+            self.clock.tick(1)
         else:
-            self.game_active = False
-            pygame.mouse.set_visible(True)
-            self.settings.initialize_dynamic_settings()
+            self._game_inactive()
 
+    def _game_inactive(self):
+        self.game_active = False
+        self.play_button.game_over()
+        self.stats.reset_stats()
+        self.play_button.draw_button()
+        pygame.mouse.set_visible(True)
+        self.settings.initialize_dynamic_settings()
     def _check_aliens_bottom(self):
         for alien in self.aliens.sprites():
             if alien.rect.bottom >= self.settings.screen_height:
                 self._ship_hit()
+                self.ship.center_ship()
                 break
 
     def _check_play_button(self, mouse_pos):
-        ''' Start a new game when the player clicks play'''
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if button_clicked and not self.game_active:
-            # reset the game settings
             self.stats.reset_stats()
-            self.stats.score = 0
-            self.stats.level = 1
-            self.stats.lives = 3
-            self.scoreboard.prep_score()
-            self.scoreboard.prep_level()
-            self.scoreboard.prep_lives()
+            self._prepare()
             self.settings.initialize_dynamic_settings()
+            self.prep_ships()
             self._start_game()
 
+
     def _start_game(self):
-        # reset the game stats
         if not self.game_active:
             self.stats.reset_stats()
-            self.game_active = True
-
-            # get rid of any remaining bullet or aliens
             self.bullets.empty()
             self.aliens.empty()
-
-            # create a new fleet and center the ship
             self._create_fleet()
             self.ship.center_ship()
-
-            # hiding the mouse curser
+            self.game_active = True
             pygame.mouse.set_visible(False)
 
     def _update_screen(self):
-        self.screen.fill(self.settings.bg_color)
+        self.screen.blit(self.background, (0, 0))
+        self._prepare()
+        self._show()
+        pygame.display.flip()
+    def _prepare(self):
         self.scoreboard.prep_score()
         self.scoreboard.prep_level()
-        self.scoreboard.prep_lives()
+        self.ships.update()
 
+    def _show(self):
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.ship.blitme()
         self.aliens.draw(self.screen)
         self.scoreboard.show_score()
-        # drtaw the play button if game is inactive
+
+        self.ships.draw(self.screen)
+
         if not self.game_active:
             self.play_button.draw_button()
-        # flip the screen
-        pygame.display.flip()
+
+        if self.settings.ship_limit == 0:
+            self.game_active = False
+            self.play_button.game_over()
+            self.play_button.draw_button()
 
 
 if __name__ == '__main__':

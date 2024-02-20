@@ -1,13 +1,13 @@
 import pygame
 
 class Ship:
-    def __init__(self, ai_game, ship_size=0.03):
+    def __init__(self, ai_game, ship_size=0.17):
         '''initialize the ship and set its starting position'''
         self.screen = ai_game.screen
         self.screen_rect = ai_game.screen_rect
         self.settings = ai_game.settings
         # load the image
-        org_image = pygame.image.load('images/ship1.jpg')
+        org_image = pygame.image.load('images/ship3.png')
         self.image = pygame.transform.scale(org_image, (int(org_image.get_width() * ship_size),
                                                         int(org_image.get_height() * ship_size)))
         self.rect = self.image.get_rect()

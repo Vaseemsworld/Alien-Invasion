@@ -5,8 +5,6 @@ class GameStats:
     '''track statistics for game'''
     def __init__(self,ai_game):
         self.settings = ai_game.settings
-        # high score should never be reset
-        # self.high_score = 0
         self.score = 0
         self.level = 1
         self.lives = 3
