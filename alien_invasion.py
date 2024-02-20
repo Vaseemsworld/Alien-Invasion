@@ -1,7 +1,12 @@
+from os import environ
+
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = '1'
+
 import sys
+import time
 from time import sleep
 import pygame
-
+from pygame import mixer
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
@@ -10,9 +15,11 @@ from game_stats import GameStats
 from button import Button
 from scoreboard import ScoreBoard, ShipBoard
 
+
 class AlienInvasion:
     def __init__(self):
         pygame.init()
+        mixer.init()
         self.clock = pygame.time.Clock()
         self.settings = Settings()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -34,6 +41,12 @@ class AlienInvasion:
         self.game_pause = False
         self.ships = pygame.sprite.Group()
         self.prep_ships()
+        self.gun_shot = mixer.Sound('sounds/gun shot1.mp3')
+        self.bullet_alien_sound = mixer.Sound('sounds/bullet alien explosion.mp3')
+        self.lose_life_sound = mixer.Sound('sounds/lose sound1.wav')
+        self.lose_sound = mixer.Sound('sounds/lose sound2.wav')
+        self.high_score_sound = mixer.Sound('sounds/high score sound.wav')
+
     def prep_ships(self):
         self.ships.empty()
         for ship_number in range(self.settings.ship_limit):
@@ -41,6 +54,7 @@ class AlienInvasion:
             ship.rect.x = 10 + ship_number * ship.rect.width
             ship.rect.y = 10  # Adjust the y-coordinate as needed
             self.ships.add(ship)
+
     def run_game(self):
         self._create_fleet()
         while True:
@@ -69,6 +83,8 @@ class AlienInvasion:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 self._check_play_button(mouse_pos)
+            elif event.type == pygame.USEREVENT:
+                self.high_score_sound.stop()  # Stop the sound when the timer expires
 
     def _check_keydown_event(self, event):
         if event.key == pygame.K_q:
@@ -90,13 +106,17 @@ class AlienInvasion:
             self.ship.moving_left = True
 
         if event.key == pygame.K_SPACE:
-            self._fire_bullet()
+            if not self.game_pause:
+                self._fire_bullet()
+                self.gun_shot.play()
 
     def _check_keyup_event(self, event):
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = False
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = False
+        if event.key == pygame.K_SPACE:
+            self.gun_shot.stop()
 
     def _fire_bullet(self):
         new_bullet = Bullet(self)
@@ -111,6 +131,7 @@ class AlienInvasion:
     def _bullet_alien_collision(self):
         collision = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
         if collision:
+            self.bullet_alien_sound.play()
             for aliens in collision.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.scoreboard.prep_score()
@@ -168,6 +189,7 @@ class AlienInvasion:
     def _alien_ship_collision(self):
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
             self._ship_hit()
+            self.lose_life_sound.play()
 
     def _ship_hit(self):
         if self.settings.ship_limit > 0:
@@ -188,10 +210,12 @@ class AlienInvasion:
         self.play_button.draw_button()
         pygame.mouse.set_visible(True)
         self.settings.initialize_dynamic_settings()
+
     def _check_aliens_bottom(self):
         for alien in self.aliens.sprites():
             if alien.rect.bottom >= self.settings.screen_height:
                 self._ship_hit()
+                self.lose_life_sound.play()
                 self.ship.center_ship()
                 break
 
@@ -203,7 +227,6 @@ class AlienInvasion:
             self.settings.initialize_dynamic_settings()
             self.prep_ships()
             self._start_game()
-
 
     def _start_game(self):
         if not self.game_active:
@@ -220,6 +243,7 @@ class AlienInvasion:
         self._prepare()
         self._show()
         pygame.display.flip()
+
     def _prepare(self):
         self.scoreboard.prep_score()
         self.scoreboard.prep_level()
@@ -239,6 +263,8 @@ class AlienInvasion:
 
         if self.settings.ship_limit == 0:
             self.game_active = False
+            self.lose_life_sound.stop()
+            self.lose_sound.play()
             self.play_button.game_over()
             self.play_button.draw_button()
 

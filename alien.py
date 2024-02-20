@@ -2,7 +2,7 @@ import pygame
 from pygame.sprite import Sprite
 
 class Alien(Sprite):
-    def __init__(self,ai_game,alien_size = 0.12):
+    def __init__(self,ai_game,alien_size = 0.16):
         super().__init__()
         self.screen = ai_game.screen
         self.screen_rect = ai_game.screen_rect

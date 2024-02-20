@@ -3,7 +3,7 @@ import pygame.font
 from pygame.sprite import Sprite,Group
 
 class ShipBoard(Sprite):
-    def __init__(self,ai_game,ship_size=0.09):
+    def __init__(self,ai_game,ship_size=0.12):
         super().__init__()
         '''initialize the ship and set its starting position'''
         self.ai_game = ai_game
@@ -34,7 +34,7 @@ class ScoreBoard(ShipBoard):
         self.prep_score()
         self.prep_high_score()
         self.prep_level()
-
+        self.display_new_record = False
     def prep_score(self):
         '''turn the score into rendered image'''
         # round the numbers
@@ -79,6 +79,36 @@ class ScoreBoard(ShipBoard):
         self.lives_rect.left = self.screen_rect.left + 20  # Adjusted the position for better visibility
         self.lives_rect.top = 20
 
+    def display_new_record_msg(self):
+        if not self.display_new_record:
+            self.ai_game.high_score_sound.play()
+            # Initial settings
+            alpha = 255  # Initial alpha value for fully opaque
+            duration = 2000  # Display duration in milliseconds
+            fade_speed = 2  # Speed of the fade-out effect
+
+            # Display the initial message
+            text_surface = self.font.render('New Record!', True, self.text_color)
+            text_surface.set_alpha(alpha)
+            self.text_img_rect = text_surface.get_rect(center=self.screen_rect.center)
+            self.screen.blit(text_surface, self.text_img_rect)
+            pygame.display.flip()
+
+            # Wait for the initial duration
+            pygame.time.wait(duration)
+
+            # Fade-out loop
+            while alpha > 0:
+                alpha -= fade_speed
+                text_surface.set_alpha(alpha)
+                self.screen.blit(text_surface, self.text_img_rect)
+                pygame.display.flip()
+                pygame.time.delay(5)  # Small delay for a smoother effect
+
+            # Clear the text
+            pygame.display.flip()
+
+            self.display_new_record = True
 
     def show_score(self):
         '''Draw scores and level to the screen.'''
@@ -89,6 +119,7 @@ class ScoreBoard(ShipBoard):
     def check_high_score(self):
         '''check to see if there's a new high score'''
         if self.stats.score > self.stats.high_score:
+            self.display_new_record_msg()
             self.stats.high_score = self.stats.score
             self.prep_high_score()
 
