@@ -81,7 +81,7 @@ class ScoreBoard(ShipBoard):
 
     def display_new_record_msg(self):
         if not self.display_new_record:
-            self.ai_game.high_score_sound.play()
+            self.ai_game.high_score_sound.play(fade_ms=-2000)
             # Initial settings
             alpha = 255  # Initial alpha value for fully opaque
             duration = 2000  # Display duration in milliseconds
