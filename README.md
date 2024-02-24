@@ -26,7 +26,7 @@ The game features:
 **GamePlay**
 
 - Play: P key or Click the Play Button
-- Move the ship: Arrow keys (left and right)
+- Move the ship: Arrow keys k
 - Fire bullets: Spacebar
 - Quit the game: Q key 
 

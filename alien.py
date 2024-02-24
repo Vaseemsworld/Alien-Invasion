@@ -19,7 +19,7 @@ class Alien(Sprite):
         self.x = float(self.rect.x)
 
     def _load_image(self,alien_size = 0.09):
-        alien_img = pygame.image.load('images/alien2.png')
+        alien_img = pygame.image.load('images/alien.png')
         self.image = pygame.transform.scale(alien_img, (int(alien_img.get_width() * alien_size),
                                                         int(alien_img.get_height() * alien_size)))
     def blitme(self):

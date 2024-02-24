@@ -11,7 +11,7 @@ class ShipBoard(Sprite):
         self.screen_rect = ai_game.screen_rect
         self.settings = ai_game.settings
         # load the image
-        org_image = pygame.image.load('images/ship3.png')
+        org_image = pygame.image.load('images/ship.png')
         self.image = pygame.transform.scale(org_image, (int(org_image.get_width() * ship_size),
                                                             int(org_image.get_height() * ship_size)))
         self.rect = self.image.get_rect()
