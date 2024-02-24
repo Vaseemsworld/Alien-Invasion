@@ -40,22 +40,25 @@ class AlienInvasion:
         self.play_button = Button(self, 'Play')
         self.game_pause = False
         self.ships = pygame.sprite.Group()
+
         self.left_ships()
         self._sounds()
 
     def _sounds(self):
-        self.gun_shot = mixer.Sound('sounds/gun shot1.flac')
-        self.gun_shot.set_volume(0.07)
-        self.bullet_alien_sound = mixer.Sound('sounds/bullet alien explosion.flac')
-        self.bullet_alien_sound.set_volume(0.05)
-        self.lose_life_sound = mixer.Sound('sounds/lose sound1.flac')
-        self.lose_life_sound.set_volume(0.3)
-        self.lose_sound_played = False
-        self.lose_sound = mixer.Sound('sounds/lose sound2.flac')
-        self.high_score_sound = mixer.Sound('sounds/high score sound.flac')
-        mixer.music.load('sounds/shooter-time-aggressive-powerful-dark-motivational-sci-fi-music-187008.flac')
-        mixer.music.set_volume(0.09)
-
+        try:
+            self.gun_shot = mixer.Sound('sounds/gun shot1.flac')
+            self.gun_shot.set_volume(0.07)
+            self.bullet_alien_sound = mixer.Sound('sounds/bullet alien explosion.flac')
+            self.bullet_alien_sound.set_volume(0.05)
+            self.lose_life_sound = mixer.Sound('sounds/lose sound1.flac')
+            self.lose_life_sound.set_volume(0.3)
+            self.lose_sound_played = False
+            self.lose_sound = mixer.Sound('sounds/lose sound2.flac')
+            self.high_score_sound = mixer.Sound('sounds/high score sound.flac')
+            mixer.music.load('sounds/shooter-time-aggressive-powerful-dark-motivational-sci-fi-music-187008.flac')
+            mixer.music.set_volume(0.09)
+        except Exception as E:
+            print('Error Occured')
     def left_ships(self):
         self.ships.empty()
         for ship_number in range(self.settings.ship_limit):
@@ -83,6 +86,7 @@ class AlienInvasion:
                 self.game_active = False
                 pygame.mouse.set_visible(True)
                 self.play_button.game_over()
+
 
     def _check_event(self):
         for event in pygame.event.get():
@@ -124,7 +128,7 @@ class AlienInvasion:
             self.ship.moving_down = True
 
         if event.key == pygame.K_SPACE:
-            if not self.game_pause:
+            if not self.game_pause and self.game_active:
                 self._fire_bullet()
                 self.gun_shot.play()
 
@@ -139,6 +143,8 @@ class AlienInvasion:
             self.ship.moving_down = False
         if event.key == pygame.K_SPACE:
             self.gun_shot.stop()
+
+    ''' BULLETS '''
 
     def _fire_bullet(self):
         new_bullet = Bullet(self)
@@ -171,17 +177,18 @@ class AlienInvasion:
         self.settings.alien_speed *= self.settings.speedup_scale
         self.settings.alien_points = int(self.settings.alien_points * self.settings.score_scale)
 
+    ''' ALIENS '''
     def _create_fleet(self):
         alien = Alien(self)
         alien_width = alien.rect.width + 10
         alien_height = alien.rect.height
-        current_x = alien_width
+        current_x = alien_width + 30
         current_y = alien_height
         while current_y < self.settings.screen_height - 4 * alien_height:
             while current_x < self.settings.screen_width - 2 * alien_width:
                 self._create_alien(current_x, current_y)
                 current_x += 2 * alien_width
-            current_x = alien_width + 10
+            current_x = alien_width + 30
             current_y += 2 * alien_height
 
     def _create_alien(self, x_position, y_position):
@@ -213,6 +220,14 @@ class AlienInvasion:
             self._ship_hit()
             self.lose_life_sound.play(fade_ms=-2000)
 
+    def _check_aliens_bottom(self):
+        for alien in self.aliens.sprites():
+            if alien.rect.bottom >= self.settings.screen_height:
+                self._ship_hit()
+                self.lose_life_sound.play()
+                break
+
+
     def _ship_hit(self):
         if self.settings.ship_limit > 0:
             self.settings.ship_limit -= 1
@@ -238,13 +253,6 @@ class AlienInvasion:
         pygame.mouse.set_visible(True)
         self.settings.initialize_dynamic_settings()
 
-    def _check_aliens_bottom(self):
-        for alien in self.aliens.sprites():
-            if alien.rect.bottom >= self.settings.screen_height:
-                self._ship_hit()
-                self.lose_life_sound.play()
-                break
-
     def _check_play_button(self, mouse_pos):
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if button_clicked and not self.game_active:
@@ -256,7 +264,10 @@ class AlienInvasion:
 
     def _start_game(self):
         if not self.game_active:
-            mixer.music.play(-1)
+            try:
+                mixer.music.play(-1)
+            except pygame.error:
+                print('music not loaded')
             self.lose_sound_played = False
             self.stats.reset_stats()
             self.bullets.empty()

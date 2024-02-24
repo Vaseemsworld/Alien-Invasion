@@ -123,5 +123,8 @@ class ScoreBoard(ShipBoard):
             self.stats.high_score = self.stats.score
             self.prep_high_score()
 
-            with open('highscore.json', 'w') as f:
-                data = f.write(str(self.stats.high_score))
+            try:
+                with open('highscore.json', 'w') as f:
+                    data = f.write(str(self.stats.high_score))
+            except FileNotFoundError:
+                print("File 'higscore.json' not found")

@@ -6,7 +6,7 @@ import pygame.font
 
 class Button:
     def __init__(self, ai_game, msg):
-        self.ai_gmae = ai_game
+        self.ai_game = ai_game
         self.screen = ai_game.screen
         self.screen_rect = self.screen.get_rect()
 
@@ -54,8 +54,3 @@ class Button:
         self.screen.blit(self.msg_image, self.msg_image_rect)
 
 
-    # def pause_button(self):
-    #         self.ai_gmae.game_pause = True
-    #         self._prep_msg('PAUSE')
-    #         self.screen.fill(self.button_color, self.rect)
-    #         self.screen.blit(self.msg_image, self.msg_image_rect)
