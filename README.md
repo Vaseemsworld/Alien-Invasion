@@ -7,7 +7,7 @@ Alien Invasion is a simple space invaders-like game built using the Pygame libra
 **Vaseem khan**
 
 - GitHub: [GitHub Profile](https://github.com/vaseemsworld)
-- LinkdIn: [LinkdIn Profile](www.linkedin.com/in/vasim-khan-8740182b7)
+- LinkdIn: [LinkedIn Profile](www.linkedin.com/in/vasim-khan-8740182b7)
 
 ## Instructions
 
